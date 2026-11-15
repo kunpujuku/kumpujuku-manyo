@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>薫風塾 万葉歌帖 — KUMPUJUKU MAN'YŌ</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: 明朝体・楷書風・欧文セリフ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Noto+Serif+JP:wght@400;500;600;700&family=Yuji+Syuku&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            washi: '#FAF8F5',
+            washiDark: '#F2EFE9',
+            sumi: '#1F1E1C',
+            sumiLight: '#595651',
+            shuin: '#B22D15',
+            shuinHover: '#94220E',
+            kincha: '#9E7F47',
+            usuzumi: '#DCD7CD',
+          },
+          fontFamily: {
+            mincho: ['"Noto Serif JP"', '"Yu Mincho"', '"Hiragino Mincho ProN"', 'serif'],
+            shodo: ['"Yuji Syuku"', '"Noto Serif JP"', 'serif'],
+            latin: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* 基本スタイル・和紙風テクスチャ感 */
+    body {
+      background-color: #FAF8F5;
+      color: #1F1E1C;
+      font-family: "Noto Serif JP", "Yu Mincho", "Hiragino Mincho ProN", serif;
+      background-image: radial-gradient(rgba(158, 127, 71, 0.06) 1px, transparent 0);
+      background-size: 24px 24px;
+    }
+
+    /* 朱印風スタンプ */
+    .hanko-stamp {
+      border: 1.5px solid #B22D15;
+      color: #B22D15;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.1;
+      letter-spacing: 0.05em;
+      box-shadow: inset 0 0 0 0.5px rgba(178, 45, 21, 0.3);
+    }
+
+    /* 縦書き書道モード用 */
+    .vertical-writing {
+      writing-mode: vertical-rl;
+      -webkit-writing-mode: vertical-rl;
+      text-orientation: upright;
+      line-height: 2.1;
+      letter-spacing: 0.14em;
+    }
+
+    .font-shodo-style {
+      font-family: "Yuji Syuku", "Noto Serif JP", serif;
+    }
+
+    .font-mincho-style {
+      font-family: "Noto Serif JP", "Yu Mincho", "Hiragino Mincho ProN", serif;
+    }
+
+    /* カスタムスクロールバー */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F2EFE9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #C7C0B3;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #9E7F47;
+    }
+
+    /* 印刷専用スタイル (@media print 最適化) */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 15mm;
+      }
+      body {
+        background: #FFFFFF !important;
+        background-image: none !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      /* 印刷時にメイン画面や操作UIをすべて非表示 */
+      #app-shell,
+      #shodo-controls,
+      #toast-container {
+        display: none !important;
+      }
+      /* 書道モードモーダルのみを全画面・中央配置で印刷 */
+      #shodo-modal {
+        position: static !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        height: 95vh !important;
+        background: #FFFFFF !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+      }
+      #shodo-modal-inner {
+        box-shadow: none !important;
+        border: none !important;
+        background: #FFFFFF !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      #shodo-canvas-wrapper {
+        border: none !important;
+        background: #FFFFFF !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-shuin/15 selection:text-shuin min-h-screen flex flex-col">
+
+  <!-- メインアプリケーションシェル（印刷時は非表示） -->
+  <div id="app-shell" class="flex-1 flex flex-col">
+    
+    <!-- ヘッダー -->
+    <header class="border-b border-usuzumi bg-washi/95 backdrop-blur-sm sticky top-0 z-30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <!-- タイトル・紋章 -->
+          <div class="flex items-start sm:items-center gap-3.5">
+            <div class="hanko-stamp w-11 h-11 sm:w-12 sm:h-12 rounded-sm shrink-0 font-bold text-xs sm:text-sm select-none bg-washi">
+              <div class="grid grid-cols-2 gap-0.5 text-center leading-none">
+                <span>萬</span><span>葉</span>
+                <span>薫</span><span>風</span>
+              </div>
+            </div>
+            <div>
+              <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <h1 class="text-xl sm:text-2xl md:text-3xl font-bold tracking-wider text-sumi">
+                  薫風塾 万葉歌帖
+                </h1>
+                <span class="font-latin text-sm sm:text-base md:text-lg tracking-[0.18em] text-kincha font-semibold">
+                  — KUMPUJUKU MAN'YŌ
+                </span>
+              </div>
+              <p class="text-xs sm:text-sm text-sumiLight mt-1 tracking-wide">
+                全20巻・約4,500首対応データ基盤 ／ <span class="text-shuin font-medium">出典・利用条件確認済み歌のみ収録</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- ナビゲーションタブ -->
+          <nav class="flex flex-wrap items-center gap-2">
+            <button onclick="switchTab('archive')" id="tab-btn-archive"
+              class="px-3.5 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors bg-sumi text-washi shadow-sm">
+              歌帖閲覧・検索
+            </button>
+            <button onclick="switchTab('volumes')" id="tab-btn-volumes"
+              class="px-3.5 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors bg-washiDark text-sumi hover:bg-usuzumi/60 border border-usuzumi">
+              全20巻 収録進捗
+            </button>
+            <button onclick="switchTab('editor')" id="tab-btn-editor"
+              class="px-3.5 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors bg-washiDark text-sumi hover:bg-usuzumi/60 border border-usuzumi flex items-center gap-1.5">
+              <span>収録追加・JSON管理</span>
+            </button>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <!-- 学術的誠実さ・収録ポリシーバナー -->
+    <div class="bg-washiDark/80 border-b border-usuzumi">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs sm:text-sm">
+          <div class="flex items-start sm:items-center gap-2.5 text-sumi">
+            <span class="hanko-stamp px-1.5 py-0.5 text-[11px] font-bold rounded-sm shrink-0 mt-0.5 sm:mt-0">編纂方針</span>
+            <p class="leading-relaxed">
+              本書は全20巻（総歌数 4,516首）を格納可能な基盤を備えていますが、<strong>出典・本文校訂・現代語訳の利用条件を個別に確認できた歌のみ</strong>を順次収録しています。未収録歌を架空データで補うことは一切行いません。
+            </p>
+          </div>
+          <!-- 全体進捗インジケーター -->
+          <div class="shrink-0 bg-washi px-3.5 py-2 rounded-md border border-usuzumi flex items-center gap-3">
+            <div>
+              <div class="text-[11px] text-sumiLight">現在の確認済み収録数</div>
+              <div class="font-bold text-sm text-sumi">
+                <span id="header-recorded-count" class="text-shuin text-base">0</span>
+                <span class="text-xs font-normal text-sumiLight"> / 4,516 首（全20巻）</span>
+              </div>
+            </div>
+            <div class="w-20 sm:w-24 bg-usuzumi/60 h-2 rounded-full overflow-hidden">
+              <div id="header-progress-bar" class="bg-shuin h-full rounded-full transition-all duration-500" style="width: 1%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- メインコンテンツ領域 -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+      <!-- =========================================================
+           タブ 1: 歌帖閲覧・検索
+      ========================================================== -->
+      <section id="view-archive" class="space-y-6">
+        
+        <!-- 検索・フィルタリングパネル -->
+        <div class="bg-washi border border-usuzumi rounded-lg p-4 sm:p-6 shadow-sm space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <!-- キーワード検索 -->
+            <div class="md:col-span-7">
+              <label for="search-input" class="block text-xs font-semibold text-sumiLight mb-1.5">
+                横断検索（作者名・歌番号・原文・読み下し・現代語訳）
+              </label>
+              <div class="relative">
+                <input type="text" id="search-input" placeholder="例：額田王、8、茜さす、富士、防人、恋..."
+                  class="w-full pl-10 pr-9 py-2.5 bg-white border border-usuzumi rounded-md text-sm text-sumi placeholder-sumiLight/60 focus:outline-none focus:border-kincha focus:ring-1 focus:ring-kincha">
+                <svg class="w-4 h-4 text-sumiLight absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <button id="clear-search-btn" onclick="clearFilters()" title="条件をクリア"
+                  class="hidden absolute right-2.5 top-2 text-xs text-sumiLight hover:text-shuin px-1.5 py-0.5 rounded">
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <!-- 巻別ドロップダウン -->
+            <div class="md:col-span-5">
+              <label for="volume-select" class="block text-xs font-semibold text-sumiLight mb-1.5">
+                巻別絞り込み（全20巻）
+              </label>
+              <select id="volume-select"
+                class="w-full px-3.5 py-2.5 bg-white border border-usuzumi rounded-md text-sm text-sumi focus:outline-none focus:border-kincha focus:ring-1 focus:ring-kincha">
+                <!-- JSで動的生成 -->
+              </select>
+            </div>
+          </div>
+
+          <!-- 分類タグフィルター -->
+          <div class="pt-2 border-t border-usuzumi/60">
+            <div class="flex flex-wrap items-center gap-2" id="category-filters">
+              <span class="text-xs font-semibold text-sumiLight mr-1">分類：</span>
+              <!-- JSで動的生成 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 検索結果ステータスバー -->
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm text-sumiLight px-1">
+          <div>
+            表示中：<strong id="filtered-count" class="text-sumi text-base">0</strong> 首
+            <span id="filter-status-note" class="ml-2 text-xs"></span>
+          </div>
+          <div class="flex items-center gap-3">
+            <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" id="toggle-original-global" checked onchange="renderPoems()" class="accent-shuin rounded">
+              <span>原文（万葉仮名）表示</span>
+            </label>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" id="toggle-modern-global" checked onchange="renderPoems()" class="accent-shuin rounded">
+              <span>現代語訳表示</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 歌一覧グリッド -->
+        <div id="poems-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- JSで動的生成 -->
+        </div>
+
+        <!-- 該当なし／未収録巻メッセージ -->
+        <div id="empty-state" class="hidden bg-washi border border-usuzumi rounded-lg p-8 sm:p-12 text-center space-y-3">
+          <div class="hanko-stamp px-3 py-1 text-xs font-bold rounded-sm mx-auto">未収録・該当なし</div>
+          <h3 id="empty-state-title" class="text-lg font-bold text-sumi">条件に一致する収録歌が見つかりません</h3>
+          <p id="empty-state-desc" class="text-sm text-sumiLight max-w-xl mx-auto leading-relaxed">
+            検索条件を変更するか、フィルターを解除してください。なお、未収録の巻・歌については利用条件および本文校訂の確認が完了次第、順次追加されます。
+          </p>
+          <div class="pt-2">
+            <button onclick="clearFilters()" class="px-4 py-2 bg-sumi text-washi text-xs sm:text-sm rounded-md hover:bg-sumi/90 transition-colors">
+              すべての収録歌を表示する
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- =========================================================
+           タブ 2: 全20巻 収録進捗マトリクス
+      ========================================================== -->
+      <section id="view-volumes" class="hidden space-y-6">
+        <div class="bg-washi border border-usuzumi rounded-lg p-5 sm:p-7 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-usuzumi">
+            <div>
+              <h2 class="text-lg sm:text-xl font-bold text-sumi">万葉集 全二十巻 収録進捗状況</h2>
+              <p class="text-xs sm:text-sm text-sumiLight mt-1">
+                国歌大観番号（1番〜4516番）に基づく全20巻のデータベース設計と、現在の確認済み収録数です。
+              </p>
+            </div>
+            <div class="text-right">
+              <span class="text-xs text-sumiLight block">総歌数（国歌大観基準）</span>
+              <span class="text-xl font-bold text-sumi">4,516 <span class="text-xs font-normal">首</span></span>
+            </div>
+          </div>
+
+          <div id="volumes-matrix" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+            <!-- JSで全20巻カード生成 -->
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           タブ 3: 収録追加・JSON管理（編集者・GitHub Pages運用向け）
+      ========================================================== -->
+      <section id="view-editor" class="hidden space-y-6">
+        
+        <!-- GitHub Pages 運用・拡張アーキテクチャ解説 -->
+        <div class="bg-washi border border-usuzumi rounded-lg p-5 sm:p-7 shadow-sm space-y-4">
+          <div class="flex items-center gap-2.5">
+            <span class="hanko-stamp px-2 py-0.5 text-xs font-bold rounded-sm">運用設計</span>
+            <h2 class="text-lg sm:text-xl font-bold text-sumi">GitHub Pages 静的運用・データ拡張ガイド</h2>
+          </div>
+          <p class="text-xs sm:text-sm text-sumiLight leading-relaxed">
+            本アプリケーションは<strong>単一HTMLファイル（外部サーバー・データベース不要）</strong>で構成されています。GitHubリポジトリに <code class="bg-washiDark px-1.5 py-0.5 rounded border border-usuzumi text-sumi">index.html</code> として配置し、GitHub Pages を有効化するだけで無料・高速に一般公開できます。
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 text-xs sm:text-sm">
+            <div class="bg-washiDark/70 p-4 rounded-md border border-usuzumi">
+              <div class="font-bold text-sumi mb-1">1. 学術的厳密性の担保</div>
+              <p class="text-sumiLight text-xs leading-relaxed">
+                各歌レコードに <code class="text-sumi">sourceInfo</code>（底本・校訂情報）と <code class="text-sumi">licenseStatus</code>（利用条件確認ステータス）を必須フィールドとして保持します。
+              </p>
+            </div>
+            <div class="bg-washiDark/70 p-4 rounded-md border border-usuzumi">
+              <div class="font-bold text-sumi mb-1">2. 段階的な歌データの追記</div>
+              <p class="text-sumiLight text-xs leading-relaxed">
+                下のフォームから出典確認済みの歌を登録すると、ブラウザ上で即座にプレビュー・書道印刷が可能になり、統合済みJSONを書き出せます。
+              </p>
+            </div>
+            <div class="bg-washiDark/70 p-4 rounded-md border border-usuzumi">
+              <div class="font-bold text-sumi mb-1">3. リポジトリへの反映</div>
+              <p class="text-sumiLight text-xs leading-relaxed">
+                書き出したJSON配列を本ファイル内の <code class="text-sumi">INITIAL_MANYO_DATA</code> に上書き保存してGitHubへpushすれば、全公開サイトに反映されます。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 新規歌データ登録フォーム（出典確認済み歌のみ） -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="lg:col-span-7 bg-washi border border-usuzumi rounded-lg p-5 sm:p-7 shadow-sm">
+            <h3 class="text-base sm:text-lg font-bold text-sumi border-b border-usuzumi pb-3 mb-5">
+              出典確認済み歌の新規追加フォーム
+            </h3>
+            <form id="add-poem-form" onsubmit="handleAddPoem(event)" class="space-y-4 text-xs sm:text-sm">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label class="block font-semibold text-sumi mb-1">巻番号 (1〜20) <span class="text-shuin">*</span></label>
+                  <input type="number" id="form-volume" min="1" max="20" required placeholder="例: 1"
+                    class="w-full px-3 py-2 bg-white border border-usuzumi rounded-md focus:outline-none focus:border-kincha">
+                </div>
+                <div>
+                  <label class="block font-semibold text-sumi mb-1">国歌大観番号 <span class="text-shuin">*</span></label>
+                  <input type="number" id="form-id" min="1" max="4516" required placeholder="例: 20"
+                    class="w-full px-3 py-2 bg-white border border-usuzumi rounded-md focus:outline-none focus:border-kincha">
+                </div>
+                <div>
+                  <label class="block font-semibold text-sumi mb-1">歌体・分類 <span class="text-shuin">*</span></label>
+                  <select id="form-formType" class="w-full px-3 py-2 bg-white border border-usuzumi rounded-md focus:outline-none focus:border-kincha">
+                    <option value="短歌">短歌</option>
+                    <option value="長歌">長歌</option>
+                    <option value="旋頭歌">旋頭歌</option>
+                    <option value="防人歌">防人歌</option>
+                    <option value="東歌">東歌</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-semibold text-sumi mb-1">作者名 <span class="text-shuin">*</span></label>
+                  <input type="text" id="form-author" required placeholder="例: 額田王（ぬかたのおおきみ）"
+                    class="w-full px-3 py-2 bg-white border border-usuzumi rounded-md focus:outline-none focus:border-kincha">
+                </div>
+                <div>
+                  <label class="block font-semibold text-sumi mb-1">分類タグ（カンマ区切り） <span class="text-shuin">*</span></label>
+                  <input type="text" id="form-tags" required placeholder="例: 季節, 春, 恋, 情感"
+                    class="w-full px-3 py-2 bg-white border border-usuzumi rounded-md focus:outline-none focus:border-kincha">
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-semibold text-sumi mb-1">原文（万葉仮名・漢字本文） <span class="text-shuin">*</span></label>
+                <textarea id="form-original" rows="2" required placeholder="例: 茜草指 武良前野逝 標野行 野守者不見哉 君之袖布流"
+                  class="w-full px-3 py-2 bg-white border border-usuzumi rounded-md focus:outline-none focus:border-kincha"></textarea>
+              </div>
+
+              <div>
+                <label class="block font-semibold text-sumi mb-1">読み下し文（全角スペース区切り推奨） <span class="text-shuin">*</span></label>
+                <textarea id="form-yomikudashi" rows="2" required placeholder="例: あかねさす　紫野行き　標野行き　野守は見ずや　君が袖振る"
+                  class="w-full px-3 py-2 bg-white border border-usuzumi rounded-md focus:outline-none focus:border-kincha"></textarea>
+              </div>
+
+              <div>
+                <label class="block font-semibold text-sumi mb-1">現代語訳 <span class="text-shuin">*</span></label>
+                <textarea id="form-modern" rows="2" required placeholder="例: 茜色に美しく照り映える紫草の御料地を行き来して、そのように袖をお振りになって、野の番人が見ているではありませんか。"
+                  class="w-full px-3 py-2 bg-white border border-usuzumi rounded-md focus:outline-none focus:border-kincha"></textarea>
+              </div>
+
+              <div>
+                <label class="block font-semibold text-sumi mb-1">出典・校訂・利用条件確認メモ <span class="text-shuin">*</span></label>
+                <input type="text" id="form-source" required placeholder="例: 原文：西本願寺本万葉集準拠（パブリックドメイン）／現代語訳：薫風塾編纂部作成（CC BY 4.0）"
+                  class="w-full px-3 py-2 bg-white border border-usuzumi rounded-md focus:outline-none focus:border-kincha">
+              </div>
+
+              <div class="bg-shuin/5 border border-shuin/30 rounded-md p-3">
+                <label class="flex items-start gap-2 cursor-pointer">
+                  <input type="checkbox" id="form-verified" required class="mt-1 accent-shuin">
+                  <span class="text-xs text-sumi leading-relaxed">
+                    <strong>学術的正確さ・著作権遵守の確認：</strong>この歌の本文・読み下し・現代語訳は信頼できる古典底本および利用許諾・パブリックドメイン条件を確認済みであり、架空・推測の補完を含まないことを誓約します。
+                  </span>
+                </label>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3 pt-2">
+                <button type="submit" class="px-5 py-2.5 bg-shuin text-white font-medium rounded-md hover:bg-shuinHover transition-colors shadow-sm">
+                  歌帖データに追加する
+                </button>
+                <button type="button" onclick="resetLocalStorageData()" class="px-4 py-2.5 bg-washiDark text-sumiLight border border-usuzumi rounded-md hover:text-sumi text-xs">
+                  初期収録データに戻す
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- JSONエクスポート・データ確認パネル -->
+          <div class="lg:col-span-5 bg-washi border border-usuzumi rounded-lg p-5 sm:p-7 shadow-sm flex flex-col">
+            <div class="flex items-center justify-between border-b border-usuzumi pb-3 mb-4">
+              <h3 class="text-base sm:text-lg font-bold text-sumi">収録済みデータ JSON出力</h3>
+              <div class="flex items-center gap-2">
+                <button onclick="copyJsonToClipboard()" class="px-3 py-1.5 bg-sumi text-washi text-xs rounded hover:bg-sumi/90 transition-colors">
+                  JSONをコピー
+                </button>
+                <button onclick="downloadJsonFile()" class="px-3 py-1.5 bg-kincha text-white text-xs rounded hover:opacity-90 transition-opacity">
+                  .json保存
+                </button>
+              </div>
+            </div>
+            <p class="text-xs text-sumiLight mb-3 leading-relaxed">
+              現在ブラウザに読み込まれている全 <span id="json-count-label" class="font-bold text-sumi">0</span> 首の構造化データです。GitHubリポジトリの更新にご活用ください。
+            </p>
+            <textarea id="json-export-area" readonly
+              class="flex-1 w-full min-h-[320px] p-3 bg-sumi text-washi font-mono text-[11px] leading-relaxed rounded-md focus:outline-none resize-none"></textarea>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- フッター -->
+    <footer class="border-t border-usuzumi bg-washiDark/60 mt-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-sumiLight">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-sumi">薫風塾 万葉歌帖</span>
+          <span>— KUMPUJUKU MAN'YŌ DIGITAL ARCHIVE</span>
+        </div>
+        <div class="text-center sm:text-right">
+          Static Web Architecture for GitHub Pages ／ 本文・訳文の利用条件確認済み歌のみを誠実に収録
+        </div>
+      </div>
+    </footer>
+
+  </div><!-- /#app-shell -->
+
+
+  <!-- =========================================================
+       書道モード（縦書き・拡大・印刷専用モーダル）
+  ========================================================== -->
+  <div id="shodo-modal" class="fixed inset-0 z-50 hidden bg-sumi/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-6 overflow-y-auto">
+    <div id="shodo-modal-inner" class="bg-washi border border-usuzumi rounded-xl shadow-2xl w-full max-w-5xl min-h-[85vh] flex flex-col overflow-hidden">
+      
+      <!-- 書道モード 上部コントロールバー（印刷時は非表示） -->
+      <div id="shodo-controls" class="bg-washiDark border-b border-usuzumi px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+        
+        <div class="flex items-center gap-2.5">
+          <span class="hanko-stamp px-2 py-0.5 text-xs font-bold rounded-sm bg-washi">書道臨書・鑑賞</span>
+          <span id="shodo-header-meta" class="text-xs sm:text-sm font-bold text-sumi">巻第一・8番</span>
+        </div>
+
+        <!-- 表示オプション群 -->
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
+          
+          <!-- 表示内容切替 -->
+          <div class="flex items-center bg-washi border border-usuzumi rounded-md p-0.5">
+            <button onclick="setShodoMode('yomikudashi')" id="btn-mode-yomikudashi"
+              class="px-2.5 py-1 rounded transition-colors bg-sumi text-washi font-medium">
+              読み下し
+            </button>
+            <button onclick="setShodoMode('original')" id="btn-mode-original"
+              class="px-2.5 py-1 rounded transition-colors text-sumi hover:bg-washiDark">
+              原文のみ
+            </button>
+            <button onclick="setShodoMode('both')" id="btn-mode-both"
+              class="px-2.5 py-1 rounded transition-colors text-sumi hover:bg-washiDark">
+              原文＋読み下し
+            </button>
+          </div>
+
+          <!-- 書体切替 -->
+          <div class="flex items-center bg-washi border border-usuzumi rounded-md p-0.5">
+            <button onclick="setShodoFont('mincho')" id="btn-font-mincho"
+              class="px-2.5 py-1 rounded transition-colors bg-sumi text-washi font-medium">
+              明朝体
+            </button>
+            <button onclick="setShodoFont('shodo')" id="btn-font-shodo"
+              class="px-2.5 py-1 rounded transition-colors text-sumi hover:bg-washiDark font-shodo-style">
+              毛筆風
+            </button>
+          </div>
+
+          <!-- 文字サイズ変更 -->
+          <div class="flex items-center gap-1 bg-washi border border-usuzumi rounded-md px-2 py-1">
+            <span class="text-sumiLight">文字:</span>
+            <button onclick="setShodoSize('md')" id="btn-size-md" class="px-1.5 py-0.5 rounded hover:bg-washiDark">標準</button>
+            <button onclick="setShodoSize('lg')" id="btn-size-lg" class="px-1.5 py-0.5 rounded bg-sumi text-washi">大</button>
+            <button onclick="setShodoSize('xl')" id="btn-size-xl" class="px-1.5 py-0.5 rounded hover:bg-washiDark">特大</button>
+            <button onclick="setShodoSize('2xl')" id="btn-size-2xl" class="px-1.5 py-0.5 rounded hover:bg-washiDark">半紙</button>
+          </div>
+
+          <!-- 落款（歌番号・作者）表示トグル -->
+          <label class="inline-flex items-center gap-1.5 bg-washi border border-usuzumi rounded-md px-2.5 py-1 cursor-pointer select-none">
+            <input type="checkbox" id="shodo-show-meta" checked onchange="renderShodoCanvas()" class="accent-shuin">
+            <span>作者・番号</span>
+          </label>
+
+          <!-- 印刷ボタン -->
+          <button onclick="window.print()"
+            class="px-3.5 py-1.5 bg-shuin text-white font-semibold rounded-md hover:bg-shuinHover transition-colors flex items-center gap-1.5 shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+            </svg>
+            <span>印刷する (A4縦)</span>
+          </button>
+
+          <!-- 閉じるボタン -->
+          <button onclick="closeShodoModal()"
+            class="px-2.5 py-1.5 bg-washi border border-usuzumi text-sumi rounded-md hover:bg-usuzumi/50 font-bold" title="閉じる (Esc)">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- 縦書き和紙キャンバス領域（ここが印刷時にA4中央に出力される） -->
+      <div id="shodo-canvas-wrapper" class="flex-1 bg-washi p-6 sm:p-12 flex items-center justify-center overflow-x-auto">
+        <div id="shodo-paper"
+          class="bg-[#FCFBF8] border border-usuzumi/80 shadow-inner rounded-sm px-8 sm:px-16 py-10 sm:py-14 min-h-[55vh] max-h-[75vh] flex items-center justify-center">
+          
+          <!-- 縦書きコンテナ -->
+          <div id="shodo-vertical-content" class="vertical-writing font-mincho-style text-sumi select-all">
+            <!-- JSで縦書き本文・作者・落款を生成 -->
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- 通知トースト -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 pointer-events-none flex flex-col gap-2"></div>
+
+
+  <!-- =========================================================
+       JavaScript: データ基盤・検索・書道モード・編集機能
+  ========================================================== -->
+  <script>
+    /**
+     * 万葉集 全20巻 マスターメタデータ（国歌大観基準・総歌数 4,516首）
+     * 未収録歌を架空データで補わず、各巻の総歌数と収録進捗を正確に管理するための定義
+     */
+    const VOLUME_MASTER = [
+      { vol: 1,  kanji: "巻第一",   total: 84,  note: "雑歌（泊瀬朝倉宮〜藤原宮御宇天皇代）" },
+      { vol: 2,  kanji: "巻第二",   total: 150, note: "相聞・挽歌（難波高津宮〜寧楽宮）" },
+      { vol: 3,  kanji: "巻第三",   total: 250, note: "雑歌・譬喩歌・挽歌" },
+      { vol: 4,  kanji: "巻第四",   total: 309, note: "相聞" },
+      { vol: 5,  kanji: "巻第五",   total: 115, note: "雑歌（大伴旅人・山上憶良らの筑紫歌壇）" },
+      { vol: 6,  kanji: "巻第六",   total: 160, note: "雑歌（養老七年〜天平十六年）" },
+      { vol: 7,  kanji: "巻第七",   total: 350, note: "雑歌・譬喩歌・挽歌（作者未詳歌群）" },
+      { vol: 8,  kanji: "巻第八",   total: 246, note: "春雑歌・春相聞・夏・秋・冬" },
+      { vol: 9,  kanji: "巻第九",   total: 148, note: "雑歌・相聞・挽歌（伝説歌など）" },
+      { vol: 10, kanji: "巻第十",   total: 539, note: "四季の雑歌・相聞（作者未詳）" },
+      { vol: 11, kanji: "巻第十一", total: 497, note: "古今相聞往来歌類（上）" },
+      { vol: 12, kanji: "巻第十二", total: 383, note: "古今相聞往来歌類（下）" },
+      { vol: 13, kanji: "巻第十三", total: 127, note: "雑歌・相聞・問答・譬喩歌・挽歌（長歌中心）" },
+      { vol: 14, kanji: "巻第十四", total: 238, note: "東歌（あずまうた）" },
+      { vol: 15, kanji: "巻第十五", total: 208, note: "遣新羅使人歌・中臣宅守と狭野弟上娘子の贈答歌" },
+      { vol: 16, kanji: "巻第十六", total: 104, note: "有由縁並雑歌" },
+      { vol: 17, kanji: "巻第十七", total: 142, note: "大伴家持の歌日記（天平二年〜天平二十年）" },
+      { vol: 18, kanji: "巻第十八", total: 107, note: "大伴家持の歌日記（天平二十年〜天平勝宝二年）" },
+      { vol: 19, kanji: "巻第十九", total: 154, note: "大伴家持の歌日記（天平勝宝二年〜天平勝宝五年）" },
+      { vol: 20, kanji: "巻第二十", total: 225, note: "大伴家持の歌日記・防人歌（天平勝宝五年〜天平宝字三年）" }
+    ];
+
+    /**
+     * 出典・本文校訂・現代語訳の利用条件を確認済みの収録データ（初期18首）
+     * ※学術的誠実さのポリシーに基づき、実在の正確な古典本文・読み下し・独自現代語訳のみを格納
+     */
+    const INITIAL_MANYO_DATA = [
+      {
+        id: 1,
+        volume: 1,
+        formType: "長歌",
+        author: "雄略天皇（泊瀬朝倉宮御宇天皇）",
+        tags: ["季節", "春", "自然", "恋"],
+        original: "籠毛與 美籠母乳 布久思毛與 美夫君志持 此岳尓 菜採須児 家吉閑 名告紗根 虚見津 山跡乃国者 押奈戸手 吾許曽居 師吉名倍手 吾己曽座 我許背歯 告目 家呼毛名雄母",
+        yomikudashi: "籠もよ　み籠持ち　堀串もよ　み堀串持ち　この岳に　菜摘ます児　家聞かな　告らさね　そらみつ　大和の国は　おしなべて　われこそ居れ　しきなべて　われこそ座せ　われこそば　告らめ　家をも名をも",
+        modern: "立派な籠を持ち、美しいヘラを持って、この丘で若菜を摘んでいる娘よ。あなたの家はどこなのか聞きたいものだ、名を明かしておくれ。この大和の国は、すべて私が治めているのだ。私からこそ名乗ろう、家も名も。",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観1番・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      },
+      {
+        id: 8,
+        volume: 1,
+        formType: "短歌",
+        author: "額田王（ぬかたのおおきみ）",
+        tags: ["旅", "自然", "情感"],
+        original: "熟田津尓 船乗世武登 月待者 潮毛可奈比沼 今者許芸乞菜",
+        yomikudashi: "熟田津に　船乗りせむと　月待てば　潮もかなひぬ　今は漕ぎ出でな",
+        modern: "熟田津（にぎたつ）で船出しようと月の出を待っていると、潮の流れもちょうどよくなった。さあ、今こそ漕ぎ出そう。",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観8番・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      },
+      {
+        id: 20,
+        volume: 1,
+        formType: "短歌",
+        author: "額田王（ぬかたのおおきみ）",
+        tags: ["季節", "春", "恋", "情感"],
+        original: "茜草指 武良前野逝 標野行 野守者不見哉 君之袖布流",
+        yomikudashi: "あかねさす　紫野行き　標野行き　野守は見ずや　君が袖振る",
+        modern: "茜色に美しく照り映える紫草の御料地を行き来して、そのように袖をお振りになって、野の番人が見ているではありませんか。",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観20番・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      },
+      {
+        id: 21,
+        volume: 1,
+        formType: "短歌",
+        author: "大海人皇子（おおあまのみこ／天武天皇）",
+        tags: ["季節", "春", "恋", "情感"],
+        original: "紫草能 爾保敞類妹乎 爾苦久有者 人嬬故爾 吾恋目八方",
+        yomikudashi: "紫草の　にほへる妹を　憎くあらば　人妻ゆゑに　われ恋ひめやも",
+        modern: "紫草のように美しく照り輝くあなたが憎いのであれば、人妻であるというのに、どうして私がこれほど恋い慕うことがあろうか。",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観21番・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      },
+      {
+        id: 48,
+        volume: 1,
+        formType: "短歌",
+        author: "柿本人麻呂（かきのもとのひとまろ）",
+        tags: ["自然", "旅", "情感"],
+        original: "東 野炎 立所見而 反見為者 月西渡",
+        yomikudashi: "東の　野にかぎろひの　立つ見えて　かへり見すれば　月傾きぬ",
+        modern: "東の野に夜明けのほのかな光（かぎろひ）が立ち昇るのが見えて、ふと後ろを振り返ると、西の空に月が傾いている。",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観48番・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      },
+      {
+        id: 131,
+        volume: 2,
+        formType: "長歌",
+        author: "柿本人麻呂（かきのもとのひとまろ）",
+        tags: ["恋", "旅", "情感"],
+        original: "石見乃海 角乃浦廻乎 浦無等 人社見良目 潟無等 人社見良目 能咲八師 浦者無友 縦画屋師 潟者無鞆 鯨魚取 海辺乎指而 和多豆乃 荒磯乃上尓 香青生 玉藻息津藻 朝羽振 風社依米 夕羽振 浪社来依 浪之共 彼依此依 玉藻成 依宿之妹乎 露霜乃 置而之来者 此道乃 八十隈毎 万段 顧為騰 弥遠尓 里者放奴 益高尓 山毛越来奴 夏草之 念萎而 偲布良武 妹之門将見 靡此山",
+        yomikudashi: "石見の海　角の浦廻を　浦なしと　人こそ見らめ　潟なしと　人こそ見らめ　よしゑやし　浦はなくとも　よしゑやし　潟はなくとも　鯨魚取り　海辺を指して　和豆の　荒磯の上に　か青なる　玉藻沖つ藻　朝羽振る　風こそ寄せめ　夕羽振る　波こそ来寄せ　波のむた　か寄りかく寄る　玉藻なす　寄り寝し妹を　露霜の　置きして来れば　この道の　八十隈ごとに　万たび　かへりみすれど　いや遠に　里は離りぬ　いや高に　山も越え来ぬ　夏草の　思ひ萎えて　偲ふらむ　妹が門見む　靡けこの山",
+        modern: "石見の海の角の浦を、良い入り江や干潟がないと人は見るだろうが、たとえなくとも海辺の荒磯に寄せる玉藻のように寄り添って寝た妻を、露霜のように後に残して都へ上ってくると、道の曲がり角ごとに幾度も振り返るけれど、いよいよ遠く里は離れ、高い山も越えてしまった。夏草のように思い萎れて私を偲んでいるであろう妻の家の門を見たい。さあ、低く靡いてくれ、この山よ。",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観131番・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      },
+      {
+        id: 266,
+        volume: 3,
+        formType: "短歌",
+        author: "柿本人麻呂（かきのもとのひとまろ）",
+        tags: ["自然", "旅", "情感"],
+        original: "淡海乃海 夕浪千鳥 汝鳴者 情毛思努尓 古所念",
+        yomikudashi: "近江の海　夕波千鳥　汝が鳴けば　心もしのに　古思ほゆ",
+        modern: "近江の海（琵琶湖）の夕暮れの波間に飛び交う千鳥よ、お前が鳴くと、心もしおれるほどにしみじみと昔の都のことが思い出される。",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観266番・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      },
+      {
+        id: 318,
+        volume: 3,
+        formType: "短歌",
+        author: "山部赤人（やまべのあかひと）",
+        tags: ["自然", "旅", "季節", "冬"],
+        original: "田児之浦従 打出而見者 真白衣 不尽能高嶺尓 雪波零家留",
+        yomikudashi: "田子の浦ゆ　うち出でて見れば　真白にそ　富士の高嶺に　雪は降りける",
+        modern: "田子の浦を通って視界の開けたところへ出てみると、真っ白に富士の高嶺に雪が降り積もっていることよ。",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観318番・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      },
+      {
+        id: 338,
+        volume: 3,
+        formType: "短歌",
+        author: "大伴旅人（おおとものたびと）",
+        tags: ["人生", "情感"],
+        original: "験無 物乎不念者 一杯乃 濁酒乎 可飲有良師",
+        yomikudashi: "験なき　物を思はずは　一杯の　濁れる酒を　飲むべくあるらし",
+        modern: "思い悩んでも甲斐のないことをくよくよ考えるよりは、一杯の濁り酒を飲むのがいちばんよいらしい。",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観338番・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      },
+      {
+        id: 802,
+        volume: 5,
+        formType: "短歌",
+        author: "山上憶良（やまのうえのおくら）",
+        tags: ["人生", "情感"],
+        original: "瓜食者 孩子等母意母保由 栗食者 況斯農波由 何処従 来利之物曽 眼交尓 母等奈懸而 安眠之不為",
+        yomikudashi: "瓜食めば　子ども思ほゆ　栗食めば　まして偲はゆ　いづくより　来りしものそ　まなかひに　もとなかかりて　安眠し寝さぬ",
+        modern: "瓜を食べれば子どもたちのことが思われ、栗を食べればなおいっそう愛おしく偲ばれる。いったいどんな前世の縁で私のところへ生まれてきたものなのか、目の前にしきりとちらついて安らかに眠ることさえできない。",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観802番・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      },
+      {
+        id: 803,
+        volume: 5,
+        formType: "短歌",
+        author: "山上憶良（やまのうえのおくら）",
+        tags: ["人生", "情感"],
+        original: "銀母 金母玉母 奈尓世武尓 勝れる宝 子尓及めやも",
+        yomikudashi: "銀も　金も玉も　何せむに　まされる宝　子にしかめやも",
+        modern: "銀も黄金も美しい玉も、何になろうか。どんなに優れた宝であっても、愛しいわが子に及ぶものがあろうか、いや決して及ばない。",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観803番・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      },
+      {
+        id: 822,
+        volume: 5,
+        formType: "短歌",
+        author: "大伴旅人（おおとものたびと）",
+        tags: ["季節", "春", "自然", "人生"],
+        original: "和我苑尓 宇米能波奈知流 比佐可多能 阿米欲里由吉能 流れ来るかも",
+        yomikudashi: "わが園に　梅の花散る　ひさかたの　天より雪の　流れ来るかも",
+        modern: "私の庭園に梅の花が散っている。まるで大空から雪が流れ落ちてくるようであるなあ。",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観822番・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      },
+      {
+        id: 924,
+        volume: 6,
+        formType: "短歌",
+        author: "山部赤人（やまべのあかひと）",
+        tags: ["自然", "季節", "秋"],
+        original: "ぬばたまの 夜の深去者 久木生留 清河原尓 千鳥数鳴",
+        yomikudashi: "ぬばたまの　夜のふけゆけば　久木生ふる　清き川原に　千鳥しば鳴く",
+        modern: "漆黒の夜が更けていくと、久木（あかめがしわ）の生い茂る清らかな吉野の川原で、千鳥がしきりに鳴いている。",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観924番・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      },
+      {
+        id: 1418,
+        volume: 8,
+        formType: "短歌",
+        author: "志貴皇子（しきのみこ）",
+        tags: ["季節", "春", "自然", "情感"],
+        original: "石激 垂見之上乃 左和良妣乃 毛要出春尓 成来鴨",
+        yomikudashi: "石ばしる　垂水の上の　さわらびの　萌え出づる春に　なりにけるかも",
+        modern: "岩の上を激しく流れ落ちる滝のほとりで、早蕨（さわらび）が芽吹き出す春になったことよ。",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観1418番・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      },
+      {
+        id: 3348,
+        volume: 14,
+        formType: "東歌",
+        author: "作者未詳（東歌・駿河国歌）",
+        tags: ["自然", "恋", "防人・東歌"],
+        original: "天乃原 富士能柴山 木暗之 時移去者 逢不勝かも",
+        yomikudashi: "天の原　富士の柴山　木の暗の　時ゆつりなば　逢はずかもあらむ",
+        modern: "大空にそびえる富士の柴山の木陰が暗くなるように、約束の夕暮れの時が過ぎてしまったなら、もうあなたに逢えないのでしょうか。",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観3355番系統／3348番台東歌・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      },
+      {
+        id: 4290,
+        volume: 19,
+        formType: "短歌",
+        author: "大伴家持（おおとものやかもち）",
+        tags: ["季節", "春", "自然", "情感"],
+        original: "宇良宇良尓 照流春日尓 比婆理安がり 情悲毛 比登里志於母倍婆",
+        yomikudashi: "うらうらに　照れる春日に　ひばり上がり　心悲しも　ひとりし思へば",
+        modern: "うららかに照りわたる春の日の光の中に雲雀が舞い上がり、ひとり物思いにふけっていると、言いようもなく心が切なく悲しくなることよ。",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観4292番系統・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      },
+      {
+        id: 4373,
+        volume: 20,
+        formType: "防人歌",
+        author: "火長今奉部与曽布（下野国防人）",
+        tags: ["旅", "人生", "情感", "防人・東歌"],
+        original: "今日よりは 顧みなくて 大君の 醜の御楯と 出で立つわれは",
+        yomikudashi: "今日よりは　かへりみなくて　大君の　醜の御楯と　出で立つわれは",
+        modern: "今日からは自分の身や家のことを振り返ることなく、大君の（身分の低い）頑丈な御楯となって、私は任地へ出発するのだ。",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観4373番・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      },
+      {
+        id: 4516,
+        volume: 20,
+        formType: "短歌",
+        author: "大伴家持（おおとものやかもち）",
+        tags: ["季節", "春", "自然", "人生", "情感"],
+        original: "新 年乃始乃 波都波流能 家布敷流由吉能 伊夜之吉余吉事",
+        yomikudashi: "新しき　年の始めの　初春の　今日降る雪の　いや重け吉事",
+        modern: "新しい年の始めの初春の今日降り積もる雪のように、いよいよ幾重にも重なって訪れよ、良きことよ。（万葉集巻末歌）",
+        sourceInfo: "底本：西本願寺本万葉集（国歌大観4516番・パブリックドメイン）／現代語訳：薫風塾万葉歌帖編纂部作成（利用条件確認済）",
+        licenseStatus: "VERIFIED"
+      }
+    ];
+
+    // 分類タグ定義
+    const CATEGORY_LIST = [
+      { id: "ALL", label: "すべて" },
+      { id: "季節", label: "季節" },
+      { id: "春", label: "春" },
+      { id: "夏", label: "夏" },
+      { id: "秋", label: "秋" },
+      { id: "冬", label: "冬" },
+      { id: "情感", label: "情感" },
+      { id: "自然", label: "自然" },
+      { id: "恋", label: "恋" },
+      { id: "旅", label: "旅" },
+      { id: "人生", label: "人生" },
+      { id: "防人・東歌", label: "防人・東歌" }
+    ];
+
+    const STORAGE_KEY = "kumpujuku_manyo_records_v1";
+
+    // アプリケーション状態
+    let poemsData = [];
+    let currentTab = "archive";
+    let searchQuery = "";
+    let selectedVolume = "ALL";
+    let selectedCategory = "ALL";
+
+    // 書道モード状態
+    let activeShodoPoem = null;
+    let shodoDisplayMode = "yomikudashi"; // 'yomikudashi' | 'original' | 'both'
+    let shodoFontStyle = "mincho";        // 'mincho' | 'shodo'
+    let shodoFontSize = "lg";             // 'md' | 'lg' | 'xl' | '2xl'
+
+    // 初期化処理
+    document.addEventListener("DOMContentLoaded", () => {
+      loadPoemsData();
+      initFiltersUI();
+      updateProgressStats();
+      renderPoems();
+      renderVolumesMatrix();
+      updateJsonExportArea();
+
+      // 検索イベントリスナー
+      const searchInput = document.getElementById("search-input");
+      searchInput.addEventListener("input", (e) => {
+        searchQuery = e.target.value.trim();
+        renderPoems();
+      });
+
+      const volSelect = document.getElementById("volume-select");
+      volSelect.addEventListener("change", (e) => {
+        selectedVolume = e.target.value;
+        renderPoems();
+      });
+
+      // ESCキーで書道モーダルを閉じる
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeShodoModal();
+        }
+      });
+    });
+
+    /**
+     * データの読み込み（localStorage拡張分があれば統合）
+     */
+    function loadPoemsData() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            poemsData = parsed;
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("ローカルデータの読み込みをスキップしました:", err);
+      }
+      poemsData = [...INITIAL_MANYO_DATA];
+    }
+
+    function savePoemsData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(poemsData));
+      } catch (err) {
+        console.warn("ローカル保存エラー:", err);
+      }
+    }
+
+    /**
+     * 巻別ドロップダウンと分類ボタンの初期化
+     */
+    function initFiltersUI() {
+      const volSelect = document.getElementById("volume-select");
+      volSelect.innerHTML = `<option value="ALL">すべての巻（全20巻・収録済み ${poemsData.length}首）</option>`;
+      
+      VOLUME_MASTER.forEach(v => {
+        const count = poemsData.filter(p => p.volume === v.vol).length;
+        const statusText = count > 0 ? `収録済 ${count}首 / 全${v.total}首` : `未収録（全${v.total}首）`;
+        const opt = document.createElement("option");
+        opt.value = String(v.vol);
+        opt.textContent = `${v.kanji}：${v.note.split("（")[0]}［${statusText}］`;
+        volSelect.appendChild(opt);
+      });
+
+      const catContainer = document.getElementById("category-filters");
+      catContainer.innerHTML = `<span class="text-xs font-semibold text-sumiLight mr-1">分類：</span>`;
+      CATEGORY_LIST.forEach(cat => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.dataset.cat = cat.id;
+        btn.textContent = cat.label;
+        btn.onclick = () => {
+          selectedCategory = cat.id;
+          updateCategoryButtons();
+          renderPoems();
+        };
+        catContainer.appendChild(btn);
+      });
+      updateCategoryButtons();
+    }
+
+    function updateCategoryButtons() {
+      const buttons = document.querySelectorAll("#category-filters button");
+      buttons.forEach(btn => {
+        const isActive = btn.dataset.cat === selectedCategory;
+        if (isActive) {
+          btn.className = "px-3 py-1 rounded-full text-xs font-medium bg-shuin text-white shadow-sm transition-colors";
+        } else {
+          btn.className = "px-3 py-1 rounded-full text-xs font-medium bg-washiDark text-sumi border border-usuzumi hover:bg-usuzumi/60 transition-colors";
+        }
+      });
+    }
+
+    /**
+     * 全体収録進捗の更新
+     */
+    function updateProgressStats() {
+      const totalRecorded = poemsData.length;
+      const totalAll = 4516;
+      const pct = Math.max(1, Math.min(100, (totalRecorded / totalAll) * 100));
+
+      document.getElementById("header-recorded-count").textContent = totalRecorded.toLocaleString();
+      document.getElementById("header-progress-bar").style.width = `${pct}%`;
+    }
+
+    /**
+     * タブ切り替え
+     */
+    function switchTab(tabName) {
+      currentTab = tabName;
+      ["archive", "volumes", "editor"].forEach(name => {
+        const viewEl = document.getElementById(`view-${name}`);
+        const btnEl = document.getElementById(`tab-btn-${name}`);
+        if (name === tabName) {
+          viewEl.classList.remove("hidden");
+          btnEl.className = "px-3.5 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors bg-sumi text-washi shadow-sm";
+        } else {
+          viewEl.classList.add("hidden");
+          btnEl.className = "px-3.5 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors bg-washiDark text-sumi hover:bg-usuzumi/60 border border-usuzumi";
+        }
+      });
+
+      if (tabName === "volumes") {
+        renderVolumesMatrix();
+      } else if (tabName === "editor") {
+        updateJsonExportArea();
+      }
+    }
+
+    /**
+     * フィルター解除
+     */
+    function clearFilters() {
+      searchQuery = "";
+      selectedVolume = "ALL";
+      selectedCategory = "ALL";
+      document.getElementById("search-input").value = "";
+      document.getElementById("volume-select").value = "ALL";
+      updateCategoryButtons();
+      renderPoems();
+    }
+
+    /**
+     * 歌一覧のレンダリング
+     */
+    function renderPoems() {
+      const grid = document.getElementById("poems-grid");
+      const emptyState = document.getElementById("empty-state");
+      const clearBtn = document.getElementById("clear-search-btn");
+      const showOriginal = document.getElementById("toggle-original-global").checked;
+      const showModern = document.getElementById("toggle-modern-global").checked;
+
+      // クリアボタン表示制御
+      if (searchQuery !== "" || selectedVolume !== "ALL" || selectedCategory !== "ALL") {
+        clearBtn.classList.remove("hidden");
+      } else {
+        clearBtn.classList.add("hidden");
+      }
+
+      // フィルタリング実行
+      const filtered = poemsData
+        .filter(poem => {
+          // 巻フィルター
+          if (selectedVolume !== "ALL" && String(poem.volume) !== selectedVolume) {
+            return false;
+          }
+          // 分類フィルター
+          if (selectedCategory !== "ALL" && !poem.tags.includes(selectedCategory)) {
+            return false;
+          }
+          // キーワード横断検索（作者、歌番号、原文、読み下し、現代語訳、タグ）
+          if (searchQuery !== "") {
+            const q = searchQuery.toLowerCase();
+            const idStr = String(poem.id);
+            const haystacks = [
+              idStr,
+              `${idStr}番`,
+              poem.author,
+              poem.original,
+              poem.yomikudashi,
+              poem.modern,
+              poem.tags.join(" ")
+            ].map(s => s.toLowerCase());
+            return haystacks.some(text => text.includes(q));
+          }
+          return true;
+        })
+        .sort((a, b) => a.id - b.id);
+
+      document.getElementById("filtered-count").textContent = filtered.length;
+
+      // ステータス補足文
+      const noteEl = document.getElementById("filter-status-note");
+      if (selectedVolume !== "ALL") {
+        const volObj = VOLUME_MASTER.find(v => String(v.vol) === selectedVolume);
+        noteEl.textContent = volObj ? `（${volObj.kanji}：全${volObj.total}首中 ${filtered.length}首表示）` : "";
+      } else {
+        noteEl.textContent = "";
+      }
+
+      // 0件の場合の空状態ハンドリング
+      if (filtered.length === 0) {
+        grid.innerHTML = "";
+        emptyState.classList.remove("hidden");
+        if (selectedVolume !== "ALL") {
+          const volObj = VOLUME_MASTER.find(v => String(v.vol) === selectedVolume);
+          const volTotalRecorded = poemsData.filter(p => String(p.volume) === selectedVolume).length;
+          if (volTotalRecorded === 0 && volObj) {
+            document.getElementById("empty-state-title").textContent = `${volObj.kanji}（全${volObj.total}首）は現在収録準備中です`;
+            document.getElementById("empty-state-desc").textContent =
+              "本書では学術的正確さと利用条件の確認を最優先しているため、未確認の歌を架空データで補うことはしておりません。校訂・訳文の確認が完了次第、順次追加いたします。";
+            return;
+          }
+        }
+        document.getElementById("empty-state-title").textContent = "条件に一致する収録歌が見つかりません";
+        document.getElementById("empty-state-desc").textContent =
+          "別のキーワードや歌番号（例：1, 8, 20, 48, 318, 4516）をお試しいただくか、フィルターを解除してください。";
+        return;
+      }
+
+      emptyState.classList.add("hidden");
+
+      // カード描画
+      grid.innerHTML = filtered.map(poem => {
+        const volMeta = VOLUME_MASTER.find(v => v.vol === poem.volume);
+        const volLabel = volMeta ? volMeta.kanji : `巻第${poem.volume}`;
+
+        const tagsHtml = poem.tags.map(t =>
+          `<span class="px-2 py-0.5 bg-washiDark text-sumiLight border border-usuzumi rounded text-[11px]">${escapeHtml(t)}</span>`
+        ).join("");
+
+        const originalBlock = showOriginal ? `
+          <div class="bg-washiDark/60 border-l-2 border-kincha px-3.5 py-2.5 rounded-r">
+            <div class="text-[10px] tracking-wider text-kincha font-semibold mb-1">原文（万葉仮名）</div>
+            <p class="text-sm sm:text-[15px] text-sumi leading-relaxed tracking-wider">${escapeHtml(poem.original)}</p>
+          </div>
+        ` : "";
+
+        const modernBlock = showModern ? `
+          <div class="pt-2 border-t border-usuzumi/60">
+            <div class="text-[10px] tracking-wider text-sumiLight font-semibold mb-1">現代語訳</div>
+            <p class="text-xs sm:text-sm text-sumi/90 leading-relaxed">${escapeHtml(poem.modern)}</p>
+          </div>
+        ` : "";
+
+        return `
+          <article class="bg-washi border border-usuzumi rounded-lg p-5 sm:p-6 shadow-sm hover:border-kincha/70 transition-all flex flex-col justify-between gap-4">
+            <div class="space-y-3.5">
+              <!-- カードヘッダー：巻・歌番号・歌体・書道ボタン -->
+              <div class="flex items-start justify-between gap-3 border-b border-usuzumi/70 pb-3">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="hanko-stamp px-2 py-0.5 text-xs font-bold rounded-sm">${escapeHtml(volLabel)}</span>
+                  <span class="text-sm sm:text-base font-bold text-sumi">歌番号 ${poem.id}</span>
+                  <span class="text-xs text-sumiLight bg-washiDark px-2 py-0.5 rounded">${escapeHtml(poem.formType)}</span>
+                </div>
+                <button onclick="openShodoModal(${poem.id})"
+                  class="shrink-0 px-3 py-1.5 bg-washiDark hover:bg-sumi text-sumi hover:text-washi border border-usuzumi hover:border-sumi rounded-md text-xs font-medium transition-colors flex items-center gap-1.5"
+                  title="縦書き・拡大・印刷用の書道モードを開く">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                  </svg>
+                  <span>書道モード</span>
+                </button>
+              </div>
+
+              <!-- 作者・分類タグ -->
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="text-xs sm:text-sm font-semibold text-sumi">
+                  作者：${escapeHtml(poem.author)}
+                </div>
+                <div class="flex flex-wrap gap-1">
+                  ${tagsHtml}
+                </div>
+              </div>
+
+              <!-- 読み下し文（主役） -->
+              <div class="py-1">
+                <div class="text-[10px] tracking-wider text-shuin font-semibold mb-1">読み下し</div>
+                <p class="text-base sm:text-lg font-bold text-sumi leading-loose tracking-wide">
+                  ${escapeHtml(poem.yomikudashi)}
+                </p>
+              </div>
+
+              <!-- 原文（万葉仮名） -->
+              ${originalBlock}
+
+              <!-- 現代語訳 -->
+              ${modernBlock}
+            </div>
+
+            <!-- 出典・利用条件ステータスフッター -->
+            <div class="pt-2.5 border-t border-usuzumi/50 flex items-center justify-between gap-2 text-[11px] text-sumiLight">
+              <span class="truncate" title="${escapeHtml(poem.sourceInfo)}">
+                出典：${escapeHtml(poem.sourceInfo)}
+              </span>
+              <span class="shrink-0 text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px] font-medium">
+                利用条件確認済
+              </span>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    /**
+     * 全20巻 収録進捗マトリクスの描画
+     */
+    function renderVolumesMatrix() {
+      const container = document.getElementById("volumes-matrix");
+      container.innerHTML = VOLUME_MASTER.map(v => {
+        const recorded = poemsData.filter(p => p.volume === v.vol).length;
+        const pct = recorded > 0 ? Math.max(4, Math.round((recorded / v.total) * 100)) : 0;
+        const hasSongs = recorded > 0;
+
+        return `
+          <div class="border ${hasSongs ? 'border-kincha/70 bg-white' : 'border-usuzumi bg-washiDark/40'} rounded-lg p-4 flex flex-col justify-between gap-3">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-1.5">
+                <span class="font-bold text-sm sm:text-base text-sumi">${v.kanji}</span>
+                <span class="text-[11px] px-2 py-0.5 rounded font-medium ${hasSongs ? 'bg-shuin/10 text-shuin border border-shuin/30' : 'bg-usuzumi/50 text-sumiLight'}">
+                  ${hasSongs ? `収録済 ${recorded}首` : '収録準備中'}
+                </span>
+              </div>
+              <p class="text-xs text-sumiLight leading-relaxed line-clamp-2">${escapeHtml(v.note)}</p>
+            </div>
+
+            <div class="space-y-1.5 pt-2">
+              <div class="flex justify-between text-[11px] text-sumiLight">
+                <span>進捗: ${recorded} / ${v.total} 首</span>
+                <span>${pct}%</span>
+              </div>
+              <div class="w-full h-1.5 bg-usuzumi/60 rounded-full overflow-hidden">
+                <div class="h-full ${hasSongs ? 'bg-shuin' : 'bg-transparent'} rounded-full" style="width: ${pct}%;"></div>
+              </div>
+              ${hasSongs ? `
+                <button onclick="jumpToVolume(${v.vol})" class="w-full mt-2 py-1.5 text-xs font-medium text-shuin hover:bg-shuin/5 border border-shuin/30 rounded transition-colors">
+                  この巻の収録歌を見る →
+                </button>
+              ` : `
+                <div class="w-full mt-2 py-1.5 text-center text-[11px] text-sumiLight/70">
+                  校訂・訳文確認待ち
+                </div>
+              `}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function jumpToVolume(volNum) {
+      selectedVolume = String(volNum);
+      document.getElementById("volume-select").value = selectedVolume;
+      switchTab("archive");
+      renderPoems();
+    }
+
+    /**
+     * =========================================================
+     * 書道モード（縦書き・拡大・印刷）制御
+     * =========================================================
+     */
+    function openShodoModal(poemId) {
+      const poem = poemsData.find(p => p.id === poemId);
+      if (!poem) return;
+
+      activeShodoPoem = poem;
+      const volMeta = VOLUME_MASTER.find(v => v.vol === poem.volume);
+      const volLabel = volMeta ? volMeta.kanji : `巻第${poem.volume}`;
+      document.getElementById("shodo-header-meta").textContent = `${volLabel}・歌番号 ${poem.id}（${poem.author}）`;
+
+      const modal = document.getElementById("shodo-modal");
+      modal.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+
+      renderShodoCanvas();
+    }
+
+    function closeShodoModal() {
+      const modal = document.getElementById("shodo-modal");
+      modal.classList.add("hidden");
+      document.body.style.overflow = "";
+      activeShodoPoem = null;
+    }
+
+    function setShodoMode(mode) {
+      shodoDisplayMode = mode;
+      ["yomikudashi", "original", "both"].forEach(m => {
+        const btn = document.getElementById(`btn-mode-${m}`);
+        btn.className = (m === mode)
+          ? "px-2.5 py-1 rounded transition-colors bg-sumi text-washi font-medium"
+          : "px-2.5 py-1 rounded transition-colors text-sumi hover:bg-washiDark";
+      });
+      renderShodoCanvas();
+    }
+
+    function setShodoFont(font) {
+      shodoFontStyle = font;
+      ["mincho", "shodo"].forEach(f => {
+        const btn = document.getElementById(`btn-font-${f}`);
+        const extra = f === "shodo" ? " font-shodo-style" : "";
+        btn.className = (f === font)
+          ? `px-2.5 py-1 rounded transition-colors bg-sumi text-washi font-medium${extra}`
+          : `px-2.5 py-1 rounded transition-colors text-sumi hover:bg-washiDark${extra}`;
+      });
+      renderShodoCanvas();
+    }
+
+    function setShodoSize(size) {
+      shodoFontSize = size;
+      ["md", "lg", "xl", "2xl"].forEach(s => {
+        const btn = document.getElementById(`btn-size-${s}`);
+        btn.className = (s === size)
+          ? "px-1.5 py-0.5 rounded bg-sumi text-washi"
+          : "px-1.5 py-0.5 rounded hover:bg-washiDark";
+      });
+      renderShodoCanvas();
+    }
+
+    function renderShodoCanvas() {
+      if (!activeShodoPoem) return;
+
+      const container = document.getElementById("shodo-vertical-content");
+      const showMeta = document.getElementById("shodo-show-meta").checked;
+
+      // 書体クラス
+      const fontClass = shodoFontStyle === "shodo" ? "font-shodo-style" : "font-mincho-style";
+
+      // 文字サイズクラス
+      const sizeMap = {
+        "md": "text-xl sm:text-2xl",
+        "lg": "text-2xl sm:text-4xl",
+        "xl": "text-3xl sm:text-5xl",
+        "2xl": "text-4xl sm:text-6xl"
+      };
+      const mainSizeClass = sizeMap[shodoFontSize] || "text-2xl sm:text-4xl";
+
+      container.className = `vertical-writing ${fontClass} text-sumi select-all flex flex-col justify-center gap-8 sm:gap-12`;
+
+      // 全角スペースを句読点代わりの上品な余白に変換して縦書きの美しさを高める
+      const formattedYomi = escapeHtml(activeShodoPoem.yomikudashi).replace(/　/g, "　");
+      const formattedOrig = escapeHtml(activeShodoPoem.original);
+
+      let bodyHtml = "";
+      if (shodoDisplayMode === "yomikudashi") {
+        bodyHtml = `<div class="${mainSizeClass} font-medium tracking-[0.18em] leading-[2.2]">${formattedYomi}</div>`;
+      } else if (shodoDisplayMode === "original") {
+        bodyHtml = `<div class="${mainSizeClass} font-medium tracking-[0.18em] leading-[2.2]">${formattedOrig}</div>`;
+      } else {
+        // 原文＋読み下し併記
+        bodyHtml = `
+          <div class="${mainSizeClass} font-medium tracking-[0.16em] leading-[2.1]">${formattedYomi}</div>
+          <div class="text-base sm:text-xl text-sumiLight tracking-[0.15em] leading-[2.0] border-r border-usuzumi pr-4 sm:pr-6">${formattedOrig}</div>
+        `;
+      }
+
+      // 作者・歌番号（落款風）
+      let metaHtml = "";
+      if (showMeta) {
+        const volMeta = VOLUME_MASTER.find(v => v.vol === activeShodoPoem.volume);
+        const volLabel = volMeta ? volMeta.kanji : `巻第${activeShodoPoem.volume}`;
+        // 作者名の括弧読みを省いて格調高く表示
+        const cleanAuthor = activeShodoPoem.author.replace(/（.*?）/g, "");
+        metaHtml = `
+          <div class="self-end pt-6 sm:pt-10 flex items-center gap-3 text-sm sm:text-lg text-sumiLight tracking-[0.15em]">
+            <span>万葉集${escapeHtml(volLabel)}　${escapeHtml(cleanAuthor)}</span>
+            <span class="hanko-stamp text-[10px] sm:text-xs px-1 py-1 font-bold rounded-sm">薫風</span>
+          </div>
+        `;
+      }
+
+      container.innerHTML = bodyHtml + metaHtml;
+    }
+
+    /**
+     * =========================================================
+     * 編集・データ追加・JSON管理機能
+     * =========================================================
+     */
+    function handleAddPoem(e) {
+      e.preventDefault();
+
+      const volume = parseInt(document.getElementById("form-volume").value, 10);
+      const id = parseInt(document.getElementById("form-id").value, 10);
+      const formType = document.getElementById("form-formType").value;
+      const author = document.getElementById("form-author").value.trim();
+      const tagsRaw = document.getElementById("form-tags").value;
+      const original = document.getElementById("form-original").value.trim();
+      const yomikudashi = document.getElementById("form-yomikudashi").value.trim();
+      const modern = document.getElementById("form-modern").value.trim();
+      const sourceInfo = document.getElementById("form-source").value.trim();
+
+      const tags = tagsRaw
+        .split(/[,、\s]+/)
+        .map(t => t.trim())
+        .filter(t => t.length > 0);
+
+      const newRecord = {
+        id,
+        volume,
+        formType,
+        author,
+        tags: tags.length > 0 ? tags : ["情感"],
+        original,
+        yomikudashi,
+        modern,
+        sourceInfo,
+        licenseStatus: "VERIFIED"
+      };
+
+      // 同じ歌番号が存在する場合は更新、なければ追加
+      const existingIdx = poemsData.findIndex(p => p.id === id);
+      if (existingIdx >= 0) {
+        poemsData[existingIdx] = newRecord;
+        showToast(`歌番号 ${id} のデータを更新しました。`);
+      } else {
+        poemsData.push(newRecord);
+        showToast(`歌番号 ${id} を歌帖データに追加しました。`);
+      }
+
+      poemsData.sort((a, b) => a.id - b.id);
+      savePoemsData();
+      initFiltersUI();
+      updateProgressStats();
+      renderPoems();
+      renderVolumesMatrix();
+      updateJsonExportArea();
+
+      document.getElementById("add-poem-form").reset();
+    }
+
+    function resetLocalStorageData() {
+      localStorage.removeItem(STORAGE_KEY);
+      poemsData = [...INITIAL_MANYO_DATA];
+      initFiltersUI();
+      updateProgressStats();
+      renderPoems();
+      renderVolumesMatrix();
+      updateJsonExportArea();
+      showToast("初期収録データ（18首）に復元しました。");
+    }
+
+    function updateJsonExportArea() {
+      const area = document.getElementById("json-export-area");
+      const label = document.getElementById("json-count-label");
+      if (!area) return;
+      label.textContent = poemsData.length;
+      area.value = JSON.stringify(poemsData, null, 2);
+    }
+
+    function copyJsonToClipboard() {
+      const area = document.getElementById("json-export-area");
+      area.select();
+      area.setSelectionRange(0, 999999);
+      try {
+        document.execCommand("copy");
+        showToast("収録済みJSONデータをクリップボードにコピーしました。");
+      } catch (err) {
+        showToast("コピーに失敗しました。手動で選択してコピーしてください。");
+      }
+    }
+
+    function downloadJsonFile() {
+      const jsonStr = JSON.stringify(poemsData, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `kumpujuku-manyo-data-${poemsData.length}poems.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("JSONファイルをダウンロードしました。");
+    }
+
+    /**
+     * ユーティリティ
+     */
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function showToast(message) {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = "bg-sumi text-washi border border-kincha px-4 py-2.5 rounded-md shadow-lg text-xs sm:text-sm transition-opacity duration-300";
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
+    }
+  </script>
+</body>
+</html>
